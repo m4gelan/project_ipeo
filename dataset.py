@@ -1,13 +1,7 @@
 import torch
-from tqdm import tqdm
 import torchvision.transforms as T
-import numpy as np
 from PIL import Image
-import matplotlib.pyplot as plt
-import rasterio as rio
 import os
-import random
-from torchvision.transforms import Compose, Resize, ToTensor, Normalize
 
 def calculate_mean_std(image_folder):
     """
@@ -39,7 +33,7 @@ def calculate_mean_std(image_folder):
 
     return mean, std
 
-class RockDetectionDataset(Dataset):
+class RockDetectionDataset(torch.utils.data.Dataset):
     def __init__(self, image_folder, label_folder, mean, std, transform=None):
         self.image_folder = image_folder
         self.label_folder = label_folder
@@ -48,11 +42,11 @@ class RockDetectionDataset(Dataset):
         self.transform = transform
         self.normalize = T.Normalize(mean=mean, std=std)
 
-        assert len(self.image_files) == len(self.label_files), "Number of images and labels must match!"
+        assert len(self.image_files) == len(self.label_files)
 
     def __len__(self):
         return len(self.image_files)
-
+    
     def __getitem__(self, idx):
         # Load image
         image_path = os.path.join(self.image_folder, self.image_files[idx])
