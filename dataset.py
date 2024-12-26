@@ -59,7 +59,6 @@ def transform_train_with_labels(image, labels):
         ("horizontal_flip", lambda img, lbl: (F.hflip(img), flip_x(lbl))),
         ("rotate_90", lambda img, lbl: (F.rotate(img, 90), rotate_90(lbl))),
         ("rotate_180", lambda img, lbl: (F.rotate(img, 180), rotate_180(lbl))),
-        ("rotate_270", lambda img, lbl: (F.rotate(img, 270), rotate_270(lbl)))
     ]
 
     # Randomly apply 2-3 geometric transformations
@@ -69,10 +68,10 @@ def transform_train_with_labels(image, labels):
         augmented_images.append(aug_img)
         augmented_labels.append(aug_lbl)
 
-    # Additional image-only transformations
-    if random.random() < 0.5:
-        img_transform = T.GaussianBlur(kernel_size=3, sigma=(0.1, 2.0))
-        augmented_images = [img_transform(img) for img in augmented_images]
+    # # Additional image-only transformations - already done by yolov8
+    # if random.random() < 0.5:
+    #     img_transform = T.GaussianBlur(kernel_size=3, sigma=(0.1, 2.0))
+    #     augmented_images = [img_transform(img) for img in augmented_images]
     
     return augmented_images, augmented_labels
 
@@ -106,15 +105,6 @@ def rotate_180(labels):
         return labels
     labels[:, 1] = 1 - labels[:, 1]
     labels[:, 2] = 1 - labels[:, 2]
-    return labels
-
-def rotate_270(labels):
-    """Rotate labels 270 degrees."""
-    if labels.numel() == 0:
-        return labels
-    x, y = labels[:, 1], labels[:, 2]
-    labels[:, 1] = 1 - y
-    labels[:, 2] = x
     return labels
 
 def denormalize(image_tensor, mean, std):
