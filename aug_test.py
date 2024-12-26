@@ -18,7 +18,7 @@ def calculate_mean_std(image_folder):
 
     # Iterate through all files in the folder
     for file_name in os.listdir(image_folder):
-        if file_name.endswith(".jpg"):  # .jpg files
+        if file_name.endswith(".jpg"):
             image_path = os.path.join(image_folder, file_name)
             
             # Open image
@@ -117,17 +117,61 @@ def rotate_270(labels):
     labels[:, 2] = x
     return labels
 
-def save_augmented_data(augmented_images, augmented_labels, original_image_name, output_image_folder, output_label_folder, augmentation_names):
+# def save_augmented_data(augmented_images, augmented_labels, original_image_name, output_image_folder, output_label_folder, augmentation_names):
+#     """
+#     Save augmented images and their YOLOv8 labels.
+
+#     Args:
+#         augmented_images (list of PIL.Image): List of augmented images.
+#         augmented_labels (list of torch.Tensor): List of augmented labels (YOLOv8 format).
+#         original_image_name (str): Original image filename (e.g., "image_1.jpg").
+#         output_image_folder (str): Directory to save augmented images.
+#         output_label_folder (str): Directory to save augmented labels.
+#         augmentation_names (list of str): Names of applied augmentations (e.g., "horizontal_flip").
+#     """
+#     # Create output directories if they don't exist
+#     os.makedirs(output_image_folder, exist_ok=True)
+#     os.makedirs(output_label_folder, exist_ok=True)
+
+#     for idx, (image, labels, aug_name) in enumerate(zip(augmented_images, augmented_labels, augmentation_names)):
+#         # Construct file names
+#         base_name = os.path.splitext(original_image_name)[0]
+#         augmented_image_name = f"{base_name}_{aug_name}_{idx + 1}.jpg"
+#         augmented_label_name = f"{base_name}_{aug_name}_{idx + 1}.txt"
+
+#         # Save augmented image
+#         image_path = os.path.join(output_image_folder, augmented_image_name)
+#         image.save(image_path, format="JPEG")
+
+#         # Save augmented labels
+#         label_path = os.path.join(output_label_folder, augmented_label_name)
+#         with open(label_path, "w") as f:
+#             for label in labels:
+#                 f.write(" ".join(map(str, label.tolist())) + "\n")
+
+#     print(f"Saved augmented data for {original_image_name}.")
+
+def denormalize(image_tensor, mean, std):
+    """
+    Reverse the normalization applied to the image tensor.
+    """
+    for t, m, s in zip(image_tensor, mean, std):
+        t.mul_(s).add_(m)  # Reverse normalization: t = t * std + mean
+    return image_tensor.clamp(0, 1)  # Ensure values stay in [0, 1]
+
+def save_augmented_data(augmented_images, augmented_labels, original_image_name, output_image_folder, output_label_folder, augmentation_names, mean=None, std=None):
     """
     Save augmented images and their YOLOv8 labels.
 
     Args:
-        augmented_images (list of PIL.Image): List of augmented images.
+        augmented_images (list of PIL.Image or torch.Tensor): List of augmented images.
         augmented_labels (list of torch.Tensor): List of augmented labels (YOLOv8 format).
         original_image_name (str): Original image filename (e.g., "image_1.jpg").
         output_image_folder (str): Directory to save augmented images.
         output_label_folder (str): Directory to save augmented labels.
         augmentation_names (list of str): Names of applied augmentations (e.g., "horizontal_flip").
+        mean (list of float): Mean values for normalization.
+        std (list of float): Standard deviation values for normalization.
     """
     # Create output directories if they don't exist
     os.makedirs(output_image_folder, exist_ok=True)
@@ -138,6 +182,12 @@ def save_augmented_data(augmented_images, augmented_labels, original_image_name,
         base_name = os.path.splitext(original_image_name)[0]
         augmented_image_name = f"{base_name}_{aug_name}_{idx + 1}.jpg"
         augmented_label_name = f"{base_name}_{aug_name}_{idx + 1}.txt"
+
+        # Denormalize image tensor if it's a tensor
+        if isinstance(image, torch.Tensor):
+            if mean is not None and std is not None:
+                image = denormalize(image.clone(), mean, std)
+            image = T.ToPILImage()(image)  # Convert to PIL image for saving
 
         # Save augmented image
         image_path = os.path.join(output_image_folder, augmented_image_name)
@@ -152,12 +202,11 @@ def save_augmented_data(augmented_images, augmented_labels, original_image_name,
     print(f"Saved augmented data for {original_image_name}.")
 
 class RockDetectionDataset(torch.utils.data.Dataset):
-    def __init__(self, image_folder, label_folder, mean, std, transform=None, augment=False):
+    def __init__(self, image_folder, label_folder, mean, std, augment=False):
         self.image_folder = image_folder
         self.label_folder = label_folder
         self.image_files = sorted([f for f in os.listdir(image_folder) if f.endswith('.jpg')])
         self.label_files = sorted([f for f in os.listdir(label_folder) if f.endswith('.txt')])
-        self.transform = transform
         self.normalize = T.Normalize(mean=mean, std=std)
         self.augment = augment  # Enable augmentation
 
