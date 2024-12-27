@@ -41,38 +41,23 @@ def calculate_mean_std(image_folder):
 def transform_train_with_labels(image, labels):
     """
     Apply geometric and image augmentations to the input image and labels.
-
-    Args:
-        image (PIL.Image): The input image.
-        labels (torch.Tensor): Bounding boxes in YOLO format [class, x_center, y_center, width, height].
-
-    Returns:
-        augmented_images (list of PIL.Image): List of augmented images.
-        augmented_labels (list of torch.Tensor): List of corresponding transformed labels.
     """
     augmented_images = []
     augmented_labels = []
-    
+
     # Geometric transformations applied to both image and labels
     geometric_transforms = [
         ("vertical_flip", lambda img, lbl: (F.vflip(img), flip_y(lbl))),
         ("horizontal_flip", lambda img, lbl: (F.hflip(img), flip_x(lbl))),
         ("rotate_90", lambda img, lbl: (F.rotate(img, 90), rotate_90(lbl))),
-        ("rotate_180", lambda img, lbl: (F.rotate(img, 180), rotate_180(lbl))),
     ]
 
-    # Randomly apply 2-3 geometric transformations
-    selected_transforms = random.sample(geometric_transforms, random.randint(2, 3))
-    for _, transform in selected_transforms:
-        aug_img, aug_lbl = transform(image, labels)
+    # Apply transformations sequentially without overlap
+    for name, transform in geometric_transforms:
+        aug_img, aug_lbl = transform(image, labels.clone())  # Ensure labels are cloned
         augmented_images.append(aug_img)
         augmented_labels.append(aug_lbl)
 
-    # # Additional image-only transformations - already done by yolov8
-    # if random.random() < 0.5:
-    #     img_transform = T.GaussianBlur(kernel_size=3, sigma=(0.1, 2.0))
-    #     augmented_images = [img_transform(img) for img in augmented_images]
-    
     return augmented_images, augmented_labels
 
 # Helper functions for label transformations
@@ -80,14 +65,14 @@ def flip_x(labels):
     """Flip labels horizontally."""
     if labels.numel() == 0:
         return labels
-    labels[:, 1] = 1 - labels[:, 1]
+    labels[:, 1] = 1 - labels[:, 1]  # Flip x_center
     return labels
 
 def flip_y(labels):
     """Flip labels vertically."""
     if labels.numel() == 0:
         return labels
-    labels[:, 2] = 1 - labels[:, 2]
+    labels[:, 2] = 1 - labels[:, 2]  # Flip y_center
     return labels
 
 def rotate_90(labels):
@@ -95,16 +80,8 @@ def rotate_90(labels):
     if labels.numel() == 0:
         return labels
     x, y = labels[:, 1], labels[:, 2]
-    labels[:, 1] = y
-    labels[:, 2] = 1 - x
-    return labels
-
-def rotate_180(labels):
-    """Rotate labels 180 degrees."""
-    if labels.numel() == 0:
-        return labels
-    labels[:, 1] = 1 - labels[:, 1]
-    labels[:, 2] = 1 - labels[:, 2]
+    labels[:, 1] = y  # New x_center = old y_center
+    labels[:, 2] = 1 - x  # New y_center = 1 - old x_center
     return labels
 
 def denormalize(image_tensor, mean, std):
@@ -116,19 +93,6 @@ def denormalize(image_tensor, mean, std):
     return image_tensor.clamp(0, 1)  # Ensure pixel values are in range [0, 1]
 
 def save_augmented_data_batch(batch_images, batch_labels, batch_names, output_image_folder, output_label_folder, augmentation_names, mean=None, std=None):
-    """
-    Save a batch of augmented images and their YOLOv8 labels.
-
-    Args:
-        batch_images (list of list of PIL.Image or torch.Tensor): List of lists of augmented images (one list per original image).
-        batch_labels (list of list of torch.Tensor): List of lists of augmented labels (one list per original image).
-        batch_names (list of str): List of original image filenames (e.g., "image_1.jpg").
-        output_image_folder (str): Directory to save augmented images.
-        output_label_folder (str): Directory to save augmented labels.
-        augmentation_names (list of str): Names of applied augmentations (e.g., "horizontal_flip").
-        mean (list of float): Mean values for normalization.
-        std (list of float): Standard deviation values for normalization.
-    """
     os.makedirs(output_image_folder, exist_ok=True)
     os.makedirs(output_label_folder, exist_ok=True)
 
@@ -140,12 +104,6 @@ def save_augmented_data_batch(batch_images, batch_labels, batch_names, output_im
             augmented_image_name = f"{base_name}_aug_{idx + 1}.jpg"
             augmented_label_name = f"{base_name}_aug_{idx + 1}.txt"
 
-            # Denormalize and convert to PIL image if needed
-            if isinstance(image, torch.Tensor):
-                if mean is not None and std is not None:
-                    image = denormalize(image.clone(), mean, std)
-                image = T.ToPILImage()(image)  # Convert tensor to PIL image
-
             # Save image
             image_path = os.path.join(output_image_folder, augmented_image_name)
             image.save(image_path, format="JPEG")
@@ -154,9 +112,7 @@ def save_augmented_data_batch(batch_images, batch_labels, batch_names, output_im
             label_path = os.path.join(output_label_folder, augmented_label_name)
             with open(label_path, "w") as f:
                 for label in labels:
-                    f.write(" ".join(map(str, label.tolist())) + "\n")
-
-        print(f"Saved batch for {original_image_name}.")
+                    f.write(" ".join(map(str, label.tolist())) + "\n")  # Save transformed labels
 
 class RockDetectionDataset(torch.utils.data.Dataset):
     def __init__(self, image_folder, label_folder, mean, std, augment=False):
