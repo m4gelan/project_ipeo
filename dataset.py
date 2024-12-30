@@ -7,6 +7,204 @@ import random
 import numpy as np
 from tqdm import tqdm
 from torchvision.transforms.functional import to_pil_image
+import json
+import shutil
+
+# Dataset organisation functions:
+
+def load_dataset_from_json(json_file_path):
+    """
+    Load the dataset from a JSON file.
+
+    Parameters:
+        json_file_path (str): Path to the JSON file.
+
+    Returns:
+        dict: The loaded JSON data.
+        list: The dataset extracted from the JSON file.
+    """
+    with open(json_file_path, 'r') as file:
+        data = json.load(file)
+    print('General information about the data:', data.get('info', 'No info available'))
+    return data, data.get('dataset', [])
+
+def split_train_from_json(dataset, img_folder, base_dir_name):
+    """
+    Organize a dataset into train and test directories based on metadata.
+
+    Parameters:
+        dataset (list of dict): A list where each item contains metadata for a file.
+                               Each dict should have 'file_name' and 'split' keys.
+        img_folder (str): The folder containing the original images.
+        base_dir (str): The base directory for the dataset structure.
+    """
+    # Define directories
+    train_images = os.path.join(base_dir_name, 'train_images')
+    test = os.path.join(base_dir_name, 'test')
+
+    # Create directories if they don't exist
+    if not os.path.exists(base_dir_name):
+        os.makedirs(train_images)
+        os.makedirs(test)
+
+    # Iterate through all samples
+    for sample in dataset:
+        relative_file_name = sample.get('file_name')
+        split = sample.get('split')  # Assuming the "split" key indicates train/test
+
+        if not relative_file_name or not split:
+            print(f"Missing data in sample: {sample}. Skipping.")
+            continue
+
+        # Construct full source path
+        src_path = os.path.join(img_folder, relative_file_name)
+
+        # Define destination directory
+        if split == 'train':
+            dest_dir = train_images
+        elif split == 'test':
+            dest_dir = test
+        else:
+            print(f"Unknown split '{split}' for file '{relative_file_name}'. Skipping.")
+            continue
+
+        dest_path = os.path.join(dest_dir, os.path.basename(relative_file_name))
+
+        # Copy file to the appropriate directory
+        try:
+            shutil.copy(src_path, dest_path)
+            print(f"Copied '{relative_file_name}' to '{dest_dir}'")
+        except Exception as e:
+            print(f"Error copying '{relative_file_name}': {e}")
+
+    print("Dataset split completed.")
+    return train_images, test
+
+def save_train_annotations(dataset, base_dir_name):
+    """
+    Save annotations for training images to individual .txt files.
+
+    Parameters:
+        dataset (list of dict): A list where each item contains metadata for a file.
+                               Each dict should have 'file_name', 'split', and optionally 'rocks_annotations' keys.
+        base_dir_name (str): The base directory where the train_labels folder will be created.
+    """
+    train_labels = os.path.join(base_dir_name, 'train_labels')
+
+    # Create the train_labels directory if it doesn't exist
+    os.makedirs(train_labels, exist_ok=True)
+
+    # Process images with split == 'train'
+    for sample in dataset:
+        if sample.get('split') == 'train':
+            # Extract relevant details
+            file_name = sample.get('file_name')
+            annotations = sample.get('rocks_annotations', [])
+
+            # Create a .txt file for this image
+            base_name = os.path.splitext(os.path.basename(file_name))[0]
+            txt_file_path = os.path.join(train_labels, f"{base_name}.txt")
+
+            # Write annotations to the .txt file
+            with open(txt_file_path, 'w') as txt_file:
+                for annotation in annotations:
+                    txt_file.write(f"{annotation}\n")
+
+            print(f"Created annotation file: {txt_file_path}")
+
+    print("All train annotations have been saved to the 'train_labels' folder.")
+    return train_labels
+
+def create_validation_set_images(train_images_folder, base_dir_name):
+    """
+    Create a validation set by moving 10% of training images to a validation folder.
+
+    Parameters:
+        train_images_folder (str): Path to the training images folder.
+        base_dir_name (str): Base directory name where validation images will be stored.
+    """
+    val_images = os.path.join(base_dir_name, 'val_images')
+    os.makedirs(val_images, exist_ok=True)
+
+    # List all files in the source folder
+    files = [file for file in os.listdir(train_images_folder) if os.path.isfile(os.path.join(train_images_folder, file))]
+
+    # Calculate 10% of the total files
+    num_files_to_move = max(1, int(len(files) * 0.1))  # Ensure at least one file is moved
+
+    # Randomly select 10% of the files
+    files_to_move = random.sample(files, num_files_to_move)
+
+    # Move the selected files
+    for file in files_to_move:
+        src_path = os.path.join(train_images_folder, file)
+        dest_path = os.path.join(val_images, file)
+        shutil.move(src_path, dest_path)
+        print(f"Moved '{file}' to '{val_images}'")
+
+    print(f"Moved {len(files_to_move)} files to '{val_images}'.")
+    return val_images
+
+def create_validation_set_labels(train_labels_folder, base_dir_name):
+    """
+    Move corresponding label files for validation images to a validation labels folder.
+
+    Parameters:
+        train_labels_folder (str): Path to the training labels folder.
+        base_dir_name (str): Base directory name where validation labels will be stored.
+    """
+    val_labels = os.path.join(base_dir_name, 'val_labels')
+    val_images_folder = os.path.join(base_dir_name, 'val_images')
+    os.makedirs(val_labels, exist_ok=True)
+
+    # List all image files in val_images folder (excluding extensions)
+    val_image_files = {os.path.splitext(file)[0] for file in os.listdir(val_images_folder) if os.path.isfile(os.path.join(val_images_folder, file))}
+
+    # Move matching label files from train_labels to val_labels
+    for label_file in os.listdir(train_labels_folder):
+        # Get the base name (without extension) of the label file
+        base_name = os.path.splitext(label_file)[0]
+
+        if base_name in val_image_files:
+            src_path = os.path.join(train_labels_folder, label_file)
+            dest_path = os.path.join(val_labels, label_file)
+            shutil.move(src_path, dest_path)
+            print(f"Moved '{label_file}' to '{val_labels}'")
+
+    print("Matching label files moved to 'val_labels' folder.")
+    return val_labels
+
+def convert_tif_to_jpg(folder_path):
+    """
+    Convert all .tif files in a folder to .jpg format and remove the original .tif files.
+
+    Parameters:
+        folder_path (str): Path to the folder containing .tif images.
+    """
+    for file in os.listdir(folder_path):
+        if file.endswith('.tif'):
+            # Full path to the .tif file
+            tif_path = os.path.join(folder_path, file)
+
+            # Open the .tif file
+            try:
+                with Image.open(tif_path) as img:
+                    # Define the output path with the same name but .jpg extension
+                    jpg_path = os.path.join(folder_path, file.replace('.tif', '.jpg'))
+
+                    # Convert and save as JPG
+                    img.convert('RGB').save(jpg_path, 'JPEG')
+
+                    # Remove the original .tif file
+                    os.remove(tif_path)
+                    print(f"Converted and replaced: {file} -> {jpg_path}")
+
+            except Exception as e:
+                print(f"Error processing {file}: {e}")
+
+    print("All .tif files have been converted to .jpg and replaced.")
+
+# Data augmentation:
 
 def calculate_mean_std(image_folder):
     """
