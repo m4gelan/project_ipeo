@@ -49,7 +49,6 @@ def transform_train_with_labels(image, labels):
     geometric_transforms = [
         ("vertical_flip", lambda img, lbl: (F.vflip(img), flip_y(lbl))),
         ("horizontal_flip", lambda img, lbl: (F.hflip(img), flip_x(lbl))),
-        ("rotate_90", lambda img, lbl: (F.rotate(img, 90), rotate_90(lbl))),
     ]
 
     # Apply transformations sequentially without overlap
@@ -73,15 +72,6 @@ def flip_y(labels):
     if labels.numel() == 0:
         return labels
     labels[:, 2] = 1 - labels[:, 2]  # Flip y_center
-    return labels
-
-def rotate_90(labels):
-    """Rotate labels 90 degrees."""
-    if labels.numel() == 0:
-        return labels
-    x, y = labels[:, 1], labels[:, 2]
-    labels[:, 1] = y  # New x_center = old y_center
-    labels[:, 2] = 1 - x  # New y_center = 1 - old x_center
     return labels
 
 def denormalize(image_tensor, mean, std):
