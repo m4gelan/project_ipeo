@@ -1,7 +1,7 @@
 import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
-from PIL import Image
+from PIL import Image, ImageDraw
 import os
 import random
 import numpy as np
@@ -73,6 +73,57 @@ def flip_y(labels):
         return labels
     labels[:, 2] = 1 - labels[:, 2]  # Flip y_center
     return labels
+
+def brightning(image, labels, image_size=(640, 640)):
+    """
+    Apply brightness/contrast adjustments to the input image and labels:
+
+    Args:
+        image (PIL.Image): Input image.
+        labels (torch.Tensor): YOLO bounding boxes [class, x_center, y_center, width, height].
+        image_size (tuple): Size of the output image (height, width).
+
+    Returns:
+        List[Tuple[PIL.Image, torch.Tensor]]: List of (augmented_image, augmented_labels).
+    """
+    augmented_data = []
+    original_labels = labels.clone()
+
+    # 2. Brightness/Contrast Adjustments
+    brightness_contrast_transform = T.ColorJitter(brightness=0.3, contrast=0.3)
+    bright_image = brightness_contrast_transform(image)  # Original image used for light changes
+    augmented_data.append((bright_image, original_labels))  # Labels unchanged
+
+    return augmented_data
+
+def obstruction(image, labels, image_size=(640, 640)):
+    """
+    Apply random obstruction to the input image and labels:
+
+    Args:
+        image (PIL.Image): Input image.
+        labels (torch.Tensor): YOLO bounding boxes [class, x_center, y_center, width, height].
+        image_size (tuple): Size of the output image (height, width).
+
+    Returns:
+        List[Tuple[PIL.Image, torch.Tensor]]: List of (augmented_image, augmented_labels).
+    """
+    augmented_data = []
+    original_labels = labels.clone()
+
+    # Random Obstruction with Fixed Size
+    obstruction_image = image.copy()
+    draw = ImageDraw.Draw(obstruction_image)
+    for _ in range(random.randint(1, 3)):  # Add 1-3 fixed-size obstructions
+        rect_x_min = random.randint(0, image_size[0] - 10)
+        rect_y_min = random.randint(0, image_size[1] - 10)
+        rect_x_max = rect_x_min + 10
+        rect_y_max = rect_y_min + 10
+        draw.rectangle([rect_x_min, rect_y_min, rect_x_max, rect_y_max], fill=(0, 0, 0))
+
+    augmented_data.append((obstruction_image, original_labels))  # Labels unchanged
+
+    return augmented_data
 
 def denormalize(image_tensor, mean, std):
     """
