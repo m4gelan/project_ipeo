@@ -216,7 +216,7 @@ def convert_labels_to_yolo_format(label_input_folder, base_dir_name, bbox_width,
         bbox_height (float): Normalized height of the bounding box.
         type (str): 'train' or 'val' fot the name of the folder.
     """
-    label_output_folder = os.path.join(base_dir_name, 'yolo_{type}_labels')
+    label_output_folder = os.path.join(base_dir_name, f'yolo_{type}_labels')
     os.makedirs(label_output_folder, exist_ok=True)
 
     for label_file in os.listdir(label_input_folder):
