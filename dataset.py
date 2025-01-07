@@ -9,6 +9,7 @@ from tqdm import tqdm
 from torchvision.transforms.functional import to_pil_image
 import json
 import shutil
+import re
 
 # Dataset organisation functions:
 
@@ -204,6 +205,45 @@ def convert_tif_to_jpg(folder_path):
 
     print("All .tif files have been converted to .jpg and replaced.")
 
+def convert_labels_to_yolo_format(label_input_folder, base_dir_name, bbox_width, bbox_height, type):
+    """
+    Convert labels to YOLOv8 format.
+
+    Parameters:
+        label_input_folder (str): Path to the folder containing the original label files.
+        base_dir_name (str): Base directory name where yolo labels will be stored.
+        bbox_width (float): Normalized width of the bounding box.
+        bbox_height (float): Normalized height of the bounding box.
+        type (str): 'train' or 'val' fot the name of the folder.
+    """
+    label_output_folder = os.path.join(base_dir_name, 'yolo_{type}_labels')
+    os.makedirs(label_output_folder, exist_ok=True)
+
+    for label_file in os.listdir(label_input_folder):
+        if label_file.endswith('.txt'):  # Process only text files
+            input_path = os.path.join(label_input_folder, label_file)
+            output_path = os.path.join(label_output_folder, label_file)
+
+            with open(input_path, 'r') as infile, open(output_path, 'w') as outfile:
+                for line in infile:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    
+                    # Parse the dictionary using regex
+                    match = re.search(r"'relative_within_patch_location': \[(\d+\.\d+), (\d+\.\d+)\]", line)
+                    if match:
+                        x_center = float(match.group(1))  # Normalized x_center
+                        y_center = float(match.group(2))  # Normalized y_center
+
+                        # Write to YOLO format: class_id, x_center, y_center, width, height
+                        class_id = 0  # 'rock' class is class 0
+                        outfile.write(f"{class_id} {x_center:.6f} {y_center:.6f} {bbox_width:.6f} {bbox_height:.6f}\n")
+
+            print(f"Processed: {label_file}")
+
+    print("Conversion to YOLOv8 format completed.")
+
 # Data augmentation:
 
 def calculate_mean_std(image_folder):
@@ -236,7 +276,7 @@ def calculate_mean_std(image_folder):
 
     return mean, std
 
-def transform_train_with_labels(image, labels):
+def geometric_augmentations(image, labels):
     """
     Apply geometric and image augmentations to the input image and labels.
     """
