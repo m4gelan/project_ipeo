@@ -28,11 +28,6 @@ def aug_pipeline_geom(dataset, mean, std, batch_size, output_image_folder, outpu
         # Perform augmentations
         augmented_images, augmented_labels = dt.geometric_augmentations(original_image, original_labels)
 
-        # Verify transformations (optional debugging)
-        for i, (aug_img, aug_lbl) in enumerate(zip(augmented_images, augmented_labels)):
-            print(f"Augmentation {i + 1} for {original_image_name}:")
-            print("Labels:", aug_lbl.tolist())
-
         # Append to batch
         batch_images.append(augmented_images)
         batch_labels.append(augmented_labels)
@@ -57,6 +52,8 @@ def aug_pipeline_geom(dataset, mean, std, batch_size, output_image_folder, outpu
             augmentation_names=[f"aug_{i + 1}" for i in range(len(augmented_images))],
             mean=mean, std=std
         )
+    
+    print('Geometric augmentation completed.')
 
 def aug_pipeline_obstruction(dataset, mean, std, batch_size, output_image_folder, output_label_folder):
 
@@ -102,6 +99,9 @@ def aug_pipeline_obstruction(dataset, mean, std, batch_size, output_image_folder
             mean=mean, std=std
         )
 
+    print('Obstruction augmentation completed.')
+
+
 def aug_pipeline_brightning(dataset, mean, std, batch_size, output_image_folder, output_label_folder):
     
     # Batch processing loop
@@ -145,3 +145,5 @@ def aug_pipeline_brightning(dataset, mean, std, batch_size, output_image_folder,
             augmentation_names=[f"aug_{i + 1}" for i in range(len(batch_images))],
             mean=mean, std=std
         )
+
+    print('Brightning augmentation completed.')
