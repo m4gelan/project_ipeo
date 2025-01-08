@@ -26,7 +26,7 @@ def load_dataset_from_json(json_file_path):
     """
     with open(json_file_path, 'r') as file:
         data = json.load(file)
-    print('General information about the data:', data.get('info', 'No info available'))
+    # print('General information about the data:', data.get('info', 'No info available'))
     return data, data.get('dataset', [])
 
 def split_train_from_json(dataset, img_folder, base_dir_name):
@@ -74,7 +74,7 @@ def split_train_from_json(dataset, img_folder, base_dir_name):
         # Copy file to the appropriate directory
         try:
             shutil.copy(src_path, dest_path)
-            print(f"Copied '{relative_file_name}' to '{dest_dir}'")
+            # print(f"Copied '{relative_file_name}' to '{dest_dir}'")
         except Exception as e:
             print(f"Error copying '{relative_file_name}': {e}")
 
@@ -111,7 +111,7 @@ def save_train_annotations(dataset, base_dir_name):
                 for annotation in annotations:
                     txt_file.write(f"{annotation}\n")
 
-            print(f"Created annotation file: {txt_file_path}")
+            # print(f"Created annotation file: {txt_file_path}")
 
     print("All train annotations have been saved to the 'train_labels' folder.")
     return train_labels
@@ -141,7 +141,7 @@ def create_validation_set_images(train_images_folder, base_dir_name):
         src_path = os.path.join(train_images_folder, file)
         dest_path = os.path.join(val_images, file)
         shutil.move(src_path, dest_path)
-        print(f"Moved '{file}' to '{val_images}'")
+        # print(f"Moved '{file}' to '{val_images}'")
 
     print(f"Moved {len(files_to_move)} files to '{val_images}'.")
     return val_images
@@ -170,7 +170,7 @@ def create_validation_set_labels(train_labels_folder, base_dir_name):
             src_path = os.path.join(train_labels_folder, label_file)
             dest_path = os.path.join(val_labels, label_file)
             shutil.move(src_path, dest_path)
-            print(f"Moved '{label_file}' to '{val_labels}'")
+            # print(f"Moved '{label_file}' to '{val_labels}'")
 
     print("Matching label files moved to 'val_labels' folder.")
     return val_labels
@@ -198,7 +198,7 @@ def convert_tif_to_jpg(folder_path):
 
                     # Remove the original .tif file
                     os.remove(tif_path)
-                    print(f"Converted and replaced: {file} -> {jpg_path}")
+                    # print(f"Converted and replaced: {file} -> {jpg_path}")
 
             except Exception as e:
                 print(f"Error processing {file}: {e}")
@@ -240,7 +240,7 @@ def convert_labels_to_yolo_format(label_input_folder, base_dir_name, bbox_width,
                         class_id = 0  # 'rock' class is class 0
                         outfile.write(f"{class_id} {x_center:.6f} {y_center:.6f} {bbox_width:.6f} {bbox_height:.6f}\n")
 
-            print(f"Processed: {label_file}")
+            # print(f"Processed: {label_file}")
 
     print("Conversion to YOLOv8 format completed.")
 
@@ -425,10 +425,10 @@ class RockDetectionDataset(torch.utils.data.Dataset):
         else:
             labels_tensor = torch.empty((0, 5))
 
-        # Apply augmentation if enabled
-        if self.augment:
-            augmented_images, augmented_labels = transform_train_with_labels(image, labels_tensor)
-            return augmented_images, augmented_labels
+        # # Apply augmentation if enabled
+        # if self.augment:
+        #     augmented_images, augmented_labels = transform_train_with_labels(image, labels_tensor)
+        #     return augmented_images, augmented_labels
 
         return image_tensor, labels_tensor
     
