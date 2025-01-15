@@ -2,23 +2,34 @@
 
 ## Introduction
 
-The Federal Office for Topography swisstopo proceeds to the manual annotations of all large rocks (over 5x5m) in Switzerland to produce topographic maps. They are curious to observe what could be done with recent automatic methods. In this project we provide them with an insight on different Yolov8 versions performance on their large rock detection dataset. 
-Yolov8 ...
+The Federal Office for Topography (swisstopo) undertakes the precise and labor-intensive task of manually annotating large rocks (over 5x5 meters) across Switzerland for the production of topographic maps. With advancements in automatic detection methods, swisstopo seeks to explore the feasibility of integrating such technologies to enhance efficiency and accuracy in their workflows.
+
+This project investigates the application of the YOLOv8 object detection framework on swisstopo's large rock detection dataset. Specifically, we evaluate the performance of two YOLOv8 versions—'nano' and 'large'—trained on the dataset. The models are first trained on the provided training dataset and subsequently fine-tuned using the validation dataset to optimize their parameters. Finally, we analyze the models' performance on the test dataset by visualizing the results and computing a range of evaluation metrics.
+
+One of the key challenges in this work lies in the complexity and variability of natural data. Factors such as varying lighting conditions, shadows, dense forest canopies, and the presence of man-made structures like houses introduce significant noise and ambiguity in the detection process. These challenges necessitate robust training methodologies and comprehensive evaluation to ensure the models can generalize effectively across diverse environmental conditions.
+
+This study aims to provide a systematic evaluation of YOLOv8's capabilities for large rock detection, offering insights into the potential integration of modern machine learning techniques into geospatial annotation workflows.
 
 ## Large Rocks Dataset
 
-This dataset is based on their annotations on high-resolution RGB images and on the digital sur face model (DSM). Another possibility is to explore the differences between standard machine learning approaches (detecting local maximums, rugosity indices, etc.) and recent object detection models.
- 
- 
- Data ThestudyareaisspreadacrossValais, Ticino andGraubunden. Thetilesare geographically split
- into training and testing. The dataset includes :
- • Aerial images at a 50cm resolution with RGB bands (swissIMAGE)
- • Digital surface model (DSM) at 50cm resolution based on LiDAR data (swissSURFACE3D)
- • Hillshade raster tiles derived from the DSM data, generated with QGIS with the hillshade func
-tion (Azimut 0, Vertical angle 0)
- • Comprehensive points annotations of 2’625 large rocks from swisstopo annotators.
+The Large Rocks Dataset serves as the foundation for this project and is derived from high-resolution imagery and terrain models annotated by swisstopo. It offers a unique opportunity to compare traditional geospatial analysis techniques (e.g., local maximum detection, rugosity indices) with recent advancements in object detection models.
 
-The given dataset for this project need to be downloaded here : https://enacshare.epfl.ch/bY2wS5TcA4CefGks7NtXg
+**Dataset Characteristics**
+
+- Study Area: The dataset spans regions in Valais, Ticino, and Graubünden, which feature diverse topographical and environmental conditions.
+
+- Geographic Splitting: Tiles are geographically divided into training and testing sets to ensure robust evaluation of model performance.
+
+**Data Composition**
+- Aerial Imagery: High-resolution RGB images (50 cm resolution) from swissIMAGE.
+Provides detailed visual representation of the landscape.
+- Digital Surface Model (DSM): Terrain elevation data at 50 cm resolution derived from LiDAR through swissSURFACE3D. Captures 3D surface details critical for identifying large rock structures.
+- Hillshade Raster: Generated from DSM data using QGIS (Azimuth: 0°, Vertical Angle: 0°). Highlights surface topography through shaded relief, aiding in the visual detection of rock features.
+- Annotations: Comprehensive point annotations for 2,625 large rocks provided by swisstopo experts. Forms the ground truth for training and evaluation of detection models.
+
+**Dataset Access**
+The dataset can be downloaded from the following link:
+[Large Rocks Dataset - Download Here](https://enacshare.epfl.ch/bY2wS5TcA4CefGks7NtXg)
 
 ## Code: 'Inference.py'
 
