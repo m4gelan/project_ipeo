@@ -168,11 +168,34 @@ def organize_yolo_dataset(source_folder):
         os.makedirs(folder, exist_ok=True)
 
     # Define subfolders for each dataset type
-    train_image_folders = ['train_images']
-    train_label_folders = ['yolo_train_labels']
+    train_image_folders = [
+        'train_images',
+        'augmented_train_images_brightning',
+        'augmented_train_images_geom',
+        'augmented_train_images_obstruction'
+    ]
+
+    train_label_folders = [
+        'yolo_train_labels',
+        'augmented_train_labels_brightning',
+        'augmented_train_labels_geom',
+        'augmented_train_labels_obstruction'
+    ]
+
     val_image_folders = ['val_images']
     val_label_folders = ['yolo_val_labels']
+
     test_image_folders = ['test']
+
+    # Define suffix mapping for augmented images and labels
+    suffix_map = {
+        'augmented_train_images_brightning': '_bright',
+        'augmented_train_images_geom': '_geom',
+        'augmented_train_images_obstruction': '_obst',
+        'augmented_labels_images_brightning': '_bright',
+        'augmented_labels_images_geom': '_geom',
+        'augmented_labels_images_obstruction': '_obst'
+    }
 
     def process_combined_folder(image_folders, label_folders, source_folder, dest_images, dest_labels):
         # Process images
@@ -185,9 +208,12 @@ def organize_yolo_dataset(source_folder):
             for file_name in os.listdir(folder_path):
                 try:
                     name, ext = os.path.splitext(file_name)
+                    suffix = suffix_map.get(folder, '')
+                    base_name = f"{name}{suffix}"
+
                     # Copy image
                     src = os.path.join(folder_path, file_name)
-                    dest = os.path.join(dest_images, file_name)
+                    dest = os.path.join(dest_images, f"{base_name}{ext}")
                     if os.path.exists(src):
                         shutil.copy2(src, dest)
 
@@ -204,8 +230,13 @@ def organize_yolo_dataset(source_folder):
 
                 for file_name in os.listdir(folder_path):
                     try:
+                        name, ext = os.path.splitext(file_name)
+                        suffix = suffix_map.get(folder, '')
+                        base_name = f"{name}{suffix}"
+
+                        # Copy label
                         src = os.path.join(folder_path, file_name)
-                        dest = os.path.join(dest_labels, file_name)
+                        dest = os.path.join(dest_labels, f"{base_name}{ext}")
                         if os.path.exists(src):
                             shutil.copy2(src, dest)
 
@@ -238,6 +269,96 @@ def organize_yolo_dataset(source_folder):
         f.write("names: ['rock']  # Class names\n")
 
     print(f"YOLO dataset organized in '{destination_folder}'")
+
+
+# def organize_yolo_dataset(source_folder):
+#     # Create destination folder
+#     destination_folder = os.path.join('yolo_dataset')
+#     os.makedirs(destination_folder, exist_ok=True)
+
+#     # Define the new folder structure
+#     train_images = os.path.join(destination_folder, 'train_dataset', 'images')
+#     train_labels = os.path.join(destination_folder, 'train_dataset', 'labels')
+#     val_images = os.path.join(destination_folder, 'val_dataset', 'images')
+#     val_labels = os.path.join(destination_folder, 'val_dataset', 'labels')
+#     test_images = os.path.join(destination_folder, 'test_dataset', 'images')
+#     yaml_file = os.path.join(destination_folder, 'yolo_description.yaml')
+
+#     # Create all necessary folders
+#     for folder in [train_images, train_labels, val_images, val_labels, test_images]:
+#         os.makedirs(folder, exist_ok=True)
+
+#     # Define subfolders for each dataset type
+#     train_image_folders = ['train_images']
+#     train_label_folders = ['yolo_train_labels']
+#     val_image_folders = ['val_images']
+#     val_label_folders = ['yolo_val_labels']
+#     test_image_folders = ['test']
+
+#     def process_combined_folder(image_folders, label_folders, source_folder, dest_images, dest_labels):
+#         # Process images
+#         for folder in image_folders:
+#             folder_path = os.path.join(source_folder, folder)
+#             if not os.path.exists(folder_path):
+#                 print(f"Warning: {folder_path} does not exist, skipping folder.")
+#                 continue
+
+#             for file_name in os.listdir(folder_path):
+#                 try:
+#                     name, ext = os.path.splitext(file_name)
+#                     # Copy image
+#                     src = os.path.join(folder_path, file_name)
+#                     dest = os.path.join(dest_images, file_name)
+#                     if os.path.exists(src):
+#                         shutil.copy2(src, dest)
+
+#                 except Exception as e:
+#                     print(f"Error processing image {file_name}: {str(e)}")
+
+#         # Process labels
+#         if label_folders and dest_labels:
+#             for folder in label_folders:
+#                 folder_path = os.path.join(source_folder, folder)
+#                 if not os.path.exists(folder_path):
+#                     print(f"Warning: {folder_path} does not exist, skipping folder.")
+#                     continue
+
+#                 for file_name in os.listdir(folder_path):
+#                     try:
+#                         src = os.path.join(folder_path, file_name)
+#                         dest = os.path.join(dest_labels, file_name)
+#                         if os.path.exists(src):
+#                             shutil.copy2(src, dest)
+
+#                     except Exception as e:
+#                         print(f"Error processing label {file_name}: {str(e)}")
+
+#     # Process training dataset
+#     process_combined_folder(
+#         train_image_folders, train_label_folders,
+#         source_folder, train_images, train_labels
+#     )
+
+#     # Process validation dataset
+#     process_combined_folder(
+#         val_image_folders, val_label_folders,
+#         source_folder, val_images, val_labels
+#     )
+
+#     # Process test dataset (images only)
+#     process_combined_folder(
+#         test_image_folders, None,
+#         source_folder, test_images, None
+#     )
+
+#     # Create the YOLO description YAML file
+#     with open(yaml_file, 'w') as f:
+#         f.write(f"train: {os.path.join(destination_folder, 'train_dataset')}\n")
+#         f.write(f"val: {os.path.join(destination_folder, 'val_dataset')}\n")
+#         f.write("nc: 1  # Number of classes\n")
+#         f.write("names: ['rock']  # Class names\n")
+
+#     print(f"YOLO dataset organized in '{destination_folder}'")
 
 
 # def organize_yolo_dataset(source_folder_rgb, source_folder_hillshade):
