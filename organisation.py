@@ -169,9 +169,9 @@ def organize_yolo_dataset(source_folder):
 
     # Define subfolders for each dataset type
     train_image_folders = ['train_images']
-    train_label_folders = ['train_labels']
+    train_label_folders = ['yolo_train_labels']
     val_image_folders = ['val_images']
-    val_label_folders = ['val_labels']
+    val_label_folders = ['yolo_val_labels']
     test_image_folders = ['test']
 
     def process_combined_folder(image_folders, label_folders, source_folder, dest_images, dest_labels):
