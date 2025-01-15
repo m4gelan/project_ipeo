@@ -35,7 +35,7 @@ def predict_model(save_dir ,validation_set_path, save_dir_pred):
         save=True,                     # Save prediction images
         save_txt=True,                 # Save predictions in YOLO format
         save_conf=True,
-        conf=0.3, #confidence of at least 30%
+        conf=0.5, #confidence of at least 30%
         project=save_dir_pred,  # Set the output directory here
         imgsz=640             # Image size (ensure it matches your training)
         )
@@ -98,11 +98,11 @@ def plot_model_predictions(image_folder, label_folder, model_inputs):
         ax[0].imshow(image)
         
         # Plot predictions for each model
-        for i, (model_name, (_, _, pred_path)) in enumerate(model_inputs.items()):
+        for i, (model_name, (_, _, pred_path, _)) in enumerate(model_inputs.items()):
             pred_image = image.copy()
             pred_label_file = os.path.join(pred_path, 'predict/labels', label_files[image_index])
             pred_labels = load_yolo_labels(pred_label_file)
-            draw_boxes(pred_image, pred_labels, color=(255, 0, 0), label_type="Pred")  # Red for predictions
+            draw_boxes(pred_image, pred_labels, color=(0, 0, 255), label_type="Pred")  
             
             ax[i + 1].imshow(pred_image)
             ax[i + 1].set_title(model_name)
@@ -110,14 +110,13 @@ def plot_model_predictions(image_folder, label_folder, model_inputs):
         plt.show()
 
 #similar function as plot_model_predictions but without ground truth labels
-def plot_test_predictions(image_folder, model_inputs, type):
+def plot_test_predictions(image_folder, model_inputs):
     """
     Plot the predictions of different models for a random selection of test images.
 
     Parameters:
     - image_folder (str): Path to the folder containing the images.
     - model_inputs (dict): Dictionary where keys are model names and values are tuples of model paths and prediction paths.
-    - type (str): Type of the test set (e.g., 'RGB', 'hillshade').
     """
     # Get the sorted list of image files
     image_files = sorted(os.listdir(image_folder))
@@ -135,17 +134,17 @@ def plot_test_predictions(image_folder, model_inputs, type):
         fig, ax = plt.subplots(1, len(model_inputs), figsize=(15, 5))
         
         # Plot predictions for each model
-        for i, (model_name, (_, _, pred_path)) in enumerate(model_inputs.items()):
+        for i, (model_name, (_, _, _, pred_path)) in enumerate(model_inputs.items()):
             pred_image = image.copy()
             pred_label_file = os.path.join(
-                f"{pred_path}_{type}",
+                pred_path,
                 'predict/labels',
                 image_files[image_index].replace('.jpg', '.txt')
             )
             pred_labels = load_yolo_labels(pred_label_file)
             
             if pred_labels:
-                draw_boxes(pred_image, pred_labels, color=(255, 0, 0), label_type="Pred")  # Red for predictions
+                draw_boxes(pred_image, pred_labels, color=(0, 0, 255), label_type="Pred")  
             else:
                 cv2.putText(pred_image, "No predictions", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
             
