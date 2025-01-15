@@ -1,4 +1,6 @@
 /Data/
-/dataset_swissImage_50cm_patches/
-/dataset_swissSURFACE3D_hillshade_patches/
+/rgb_images/
+/hillshade_images/
+/combined_images/
+/dataset_combined_images/
 /yolo_dataset/

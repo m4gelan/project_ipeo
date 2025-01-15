@@ -51,6 +51,7 @@ def split_train_from_json(dataset, img_folder, base_dir_name):
     # Iterate through all samples
     for sample in dataset:
         relative_file_name = sample.get('file_name')
+        relative_file_name = os.path.splitext(relative_file_name)[0] + '.jpg'
         split = sample.get('split')  # Assuming the "split" key indicates train/test
 
         if not relative_file_name or not split:
