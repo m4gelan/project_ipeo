@@ -1,1 +1,8 @@
 /Data/
+/rgb_images/
+/hillshade_images/
+/combined_images/
+/dataset_combined_images/
+/model/
+/yolo_dataset/
+/LargeRocksDetectionDataset/
