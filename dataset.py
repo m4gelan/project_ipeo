@@ -354,10 +354,10 @@ def obstruction(image, labels, image_size=(640, 640)):
     obstruction_image = image.copy()
     draw = ImageDraw.Draw(obstruction_image)
     for _ in range(random.randint(1, 3)):  # Add 1-3 fixed-size obstructions
-        rect_x_min = random.randint(0, image_size[0] - 10)
-        rect_y_min = random.randint(0, image_size[1] - 10)
-        rect_x_max = rect_x_min + 10
-        rect_y_max = rect_y_min + 10
+        rect_x_min = random.randint(0, image_size[0] - 30)
+        rect_y_min = random.randint(0, image_size[1] - 30)
+        rect_x_max = rect_x_min + 30
+        rect_y_max = rect_y_min + 30
         draw.rectangle([rect_x_min, rect_y_min, rect_x_max, rect_y_max], fill=(0, 0, 0))
 
     augmented_data.append((obstruction_image, original_labels))  # Labels unchanged
