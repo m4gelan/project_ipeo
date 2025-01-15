@@ -20,7 +20,9 @@ tion (Azimut 0, Vertical angle 0)
 
 The given dataset for this project need to be downloaded here : https://enacshare.epfl.ch/bY2wS5TcA4CefGks7NtXg
 
-## Data Preprocessing
+## Code: 'Inference.py'
+
+### 1. Data Preprocessing
 
 combination : You could compare the usage of one source of data (e.g., only DSM or only RGB) or try to combine them. 
 Split 
@@ -29,10 +31,10 @@ Tensor
 Augemntation
 Yolo input ready
 
-## Model training
+### 2. Model training
 
 How we did it. Here is the diferent trained models : ...........
 
-## Results of the different versions
+### 3. Results of the different versions
 
 Taking a small sample of the preprocessed images we visualise the results and evaluation metrics.
