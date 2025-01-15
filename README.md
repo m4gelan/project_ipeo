@@ -66,9 +66,9 @@ The 2 models were trained using the same hyperparameters. After extensive testin
 
 - **Epochs**: 150 – Number of complete passes through the training dataset.
 
-- **Learning Rate**: \( 5 \cdot 10^{-4} \) – Balances convergence speed and stability.
+- **Learning Rate**: 5 × 10⁻⁴ – Balances convergence speed and stability.
 
-- **Weight Decay**: \( 5 \cdot 10^{-4} \) – Regularization to prevent overfitting.
+- **Weight Decay**: 5 × 10⁻⁴ – Regularization to prevent overfitting.
 
 - **Batch Size**: 32 – Optimizes memory efficiency and gradient stability.
 
