@@ -18,11 +18,16 @@ This dataset is based on their annotations on high-resolution RGB images and on 
 tion (Azimut 0, Vertical angle 0)
  • Comprehensive points annotations of 2’625 large rocks from swisstopo annotators.
 
-The given dataset for this project need to be downloaded here : 
+The given dataset for this project need to be downloaded here : https://enacshare.epfl.ch/bY2wS5TcA4CefGks7NtXg
 
 ## Data Preprocessing
 
-You could compare the usage of one source of data (e.g., only DSM or only RGB) or try to combine them. 
+combination : You could compare the usage of one source of data (e.g., only DSM or only RGB) or try to combine them. 
+Split 
+Val
+Tensor
+Augemntation
+Yolo input ready
 
 ## Model training
 
